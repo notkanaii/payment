@@ -10,8 +10,8 @@ class Customer(AbstractUser):
     id_number = models.CharField(max_length=100, unique=True)
     phone = models.BigIntegerField()
     bank_account = models.CharField(max_length=100, blank=True, null=True)
-    access_token = models.CharField(max_length=500, blank=True, null=True, default='')
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=100000)
+    token = models.CharField(max_length=500, blank=True, null=True, default='')
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default='0')
     status = models.BooleanField(default=False)
     token_time = models.CharField(max_length=50, null=True)
 

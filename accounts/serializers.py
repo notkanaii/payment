@@ -20,7 +20,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = (
             "id", "customer_name", "card_number", "card_password", "username", "email", "password", "id_number",
-            "phone", "bank_account", "access_token", "balance", "status")
+            "phone", "bank_account", "token", "balance", "status")
 
     def create(self, validated_data):
         password = validated_data.pop("password")
@@ -34,7 +34,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             id_number=validated_data["id_number"],
             phone=validated_data["phone"],
             bank_account=validated_data.get("bank_account", None),
-            access_token=validated_data.get("access_token", ""),
+            token=validated_data.get("token", ""),
             balance=validated_data.get("balance", 100000),
             status=validated_data.get("status", False),
             password=hashed_password
@@ -49,41 +49,22 @@ class SignInSerializer(serializers.Serializer):
 
 
 class SignOutSerializer(serializers.Serializer):
-    access_token = serializers.CharField()
+    token = serializers.CharField()
 
 
 # ------------------------------- DEPOSIT
 
 class DepositSerializer(serializers.Serializer):
-    access_token = serializers.CharField()
+    token = serializers.CharField()
     card_number = serializers.IntegerField()
     card_password = serializers.CharField()
-    balance = serializers.DecimalField(max_digits=10, decimal_places=2)
-
-    def validate(self, data):
-        # 验证卡号和密码是否匹配
-        try:
-            customer = Customer.objects.get(access_token=data['access_token'])
-            if customer.card_number != data['card_number'] or customer.card_password != data[
-                'card_password']:  # card_number=data['card_number'], card_password=data['card_password']
-                raise serializers.ValidationError({'Error': 'Wrong card number or password'})
-        except Customer.DoesNotExist:
-            raise serializers.ValidationError({'Error': 'Invalid token'})
-
-        # 存储余额
-        customer.balance += data['balance']
-        customer.save()
-
-        return data
-
-    def create(self, validated_data):
-        return Customer()
+    money = serializers.DecimalField(max_digits=10, decimal_places=2)
 
 
 # -------------------------------GETBALANCE
 
 class BalanceSerializer(serializers.Serializer):
-    access_token = serializers.CharField()
+    token = serializers.CharField()
 
 
 # -------------------------------STATEMENT
@@ -95,33 +76,33 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
 
 class StatementSerializer(serializers.Serializer):
-    access_token = serializers.CharField()
+    token = serializers.CharField()
 
 
 # -------------------------------Transfer
 
 class TransferSerializer(serializers.Serializer):
-    access_token = serializers.CharField()
-    dest_account = serializers.CharField()
-    transfer_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    token = serializers.CharField()
+    username = serializers.CharField()
+    money = serializers.DecimalField(max_digits=10, decimal_places=2)
     card_password = serializers.CharField()
 
     def validate(self, data):
         # 验证访问令牌和卡密码是否匹配
         try:
-            customer = Customer.objects.get(access_token=data['access_token'], card_password=data['card_password'])
+            customer = Customer.objects.get(token=data['token'], card_password=data['card_password'])
 
         except ObjectDoesNotExist:
             raise serializers.ValidationError({'Error': 'Wrong token or card_password'})
 
         # 验证目标账户是否存在
         try:
-            dest_customer = Customer.objects.get(username=data['dest_account'])
+            username = Customer.objects.get(username=data['username'])
         except ObjectDoesNotExist:
             raise serializers.ValidationError({'Error': 'Find no receiver'})
 
         # 验证转账金额是否足够
-        if customer.balance < data['transfer_amount']:
+        if customer.balance < data['money']:
             raise serializers.ValidationError({'Error': 'Balance not enough'})
 
         return data
@@ -129,19 +110,19 @@ class TransferSerializer(serializers.Serializer):
 
 # ----------------------------CreateInvoice
 class CreateInvoiceSerializer(serializers.Serializer):
-    # access_token = serializers.CharField()
-    airline = serializers.CharField()
+    # token = serializers.CharField()
+    airline_id = serializers.CharField()
     total_price = serializers.FloatField()
 
     def validate(self, data):
-        # access_token = data.get("access_token")
-        airline = data.get("airline")
+        # token = data.get("token")
+        airline_id = data.get("airline_id")
         total_price = data.get("total_price")
 
         # 检查用户和航空公司是否存在
         try:
-            # customer = Customer.objects.get(access_token=access_token, status=True)
-            airline_check = Customer.objects.get(username=airline)
+            # customer = Customer.objects.get(token=token, status=True)
+            airline_check = Customer.objects.get(username=airline_id)
         except Customer.DoesNotExist:
             raise serializers.ValidationError("Invalid airline")
 
@@ -160,10 +141,10 @@ class CreateInvoiceSerializer(serializers.Serializer):
         invoice = Invoice.objects.create(
             total_price=total_price,
             # customer=customer,
-            airline=airline,
+            airline=airline_id,
             status=False,
             stamp=stamp,
-            create_time=datetime.now(),
+            create_time=datetime.datetime.now(),
         )
 
         data["invoice_id"] = invoice.invoice_id
@@ -176,5 +157,4 @@ class CreateInvoiceSerializer(serializers.Serializer):
 # ----------------------------PayInvoice
 class PayInvoiceSerializer(serializers.Serializer):
     invoice_id = serializers.CharField(max_length=100)
-    access_token = serializers.CharField(max_length=500)
-
+    token = serializers.CharField(max_length=500)
