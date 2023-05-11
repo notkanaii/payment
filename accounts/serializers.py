@@ -65,9 +65,9 @@ class DepositSerializer(serializers.Serializer):
             customer = Customer.objects.get(access_token=data['access_token'])
             if customer.card_number != data['card_number'] or customer.card_password != data[
                 'card_password']:  # card_number=data['card_number'], card_password=data['card_password']
-                raise serializers.ValidationError({'Wrong card number or password': 6})
+                raise serializers.ValidationError({'Error': 'Wrong card number or password'})
         except Customer.DoesNotExist:
-            raise serializers.ValidationError({'Wrong token': 8})
+            raise serializers.ValidationError({'Error': 'Invalid token'})
 
         # 存储余额
         customer.balance += data['balance']
@@ -111,17 +111,17 @@ class TransferSerializer(serializers.Serializer):
             customer = Customer.objects.get(access_token=data['access_token'], card_password=data['card_password'])
 
         except ObjectDoesNotExist:
-            raise serializers.ValidationError({'Wrong token or card_password': 6})
+            raise serializers.ValidationError({'Error': 'Wrong token or card_password'})
 
         # 验证目标账户是否存在
         try:
             dest_customer = Customer.objects.get(username=data['dest_account'])
         except ObjectDoesNotExist:
-            raise serializers.ValidationError({'Find no reciver': 7})
+            raise serializers.ValidationError({'Error': 'Find no receiver'})
 
         # 验证转账金额是否足够
         if customer.balance < data['transfer_amount']:
-            raise serializers.ValidationError({'error_code': 8})
+            raise serializers.ValidationError({'Error': 'Balance not enough'})
 
         return data
 
