@@ -125,7 +125,7 @@ def deposit(request):
 
 # -----------------------------------------balance
 @api_view(['POST'])
-def balance(request):
+def getbalance(request):
     serializer = BalanceSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     token = serializer.validated_data["token"]

@@ -73,7 +73,7 @@ class BalanceApiTestCase(APITestCase):
                                                      card_password='test_card_password', id_number='1234567890',
                                                      phone=1234567890, balance=100000, token='token',
                                                      token_time='2023-05-11 10:13:22.046348')
-        self.url = reverse('balance')
+        self.url = reverse('getbalance')
 
     def test_balance_valid_token(self):
         data = {
