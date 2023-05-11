@@ -18,7 +18,6 @@ from .serializers import SignInSerializer
 from .serializers import CustomerSerializer
 from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.utils import timezone
 
 
 def generate_token(user):
@@ -57,7 +56,7 @@ def signin(request):
                 login(request, user)
                 token = generate_token(user)
                 user.access_token = str(token['access'])
-                user.token_time = str(timezone.now())
+                user.token_time = str(datetime.now())
                 user.status = True
                 user.save()
                 return Response(token, status=status.HTTP_200_OK)
@@ -96,7 +95,7 @@ def deposit(request):
     if customer.token_time != '':
         customer_time = datetime.fromisoformat(customer.token_time)
         expiration_time = customer_time + timedelta(days=30)
-        if timezone.now() > expiration_time:
+        if datetime.now() > expiration_time:
             customer.access_token = ''
             return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     if serializer.is_valid():
@@ -118,7 +117,7 @@ def balance(request):
         if user.token_time != '':
             customer_time = datetime.fromisoformat(user.token_time)
             expiration_time = customer_time + timedelta(days=30)
-            if timezone.now() > expiration_time:
+            if datetime.now() > expiration_time:
                 user.access_token = ''
                 return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         balance = user.balance
@@ -138,8 +137,8 @@ def statement(request):
         user = users.first()
         if user.token_time != '':
             customer_time = datetime.fromisoformat(user.token_time)
-            expiration_time = customer_time + timedelta(seconds=15)
-            if timezone.now() > expiration_time:
+            expiration_time = customer_time + timedelta(days=30)
+            if datetime.now() > expiration_time:
                 user.access_token = ''
                 return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         invoices = user.invoices.all()
@@ -163,7 +162,7 @@ def transfer(request):
     if customer.token_time != '':
         customer_time = datetime.fromisoformat(customer.token_time)
         expiration_time = customer_time + timedelta(days=30)
-        if timezone.now() > expiration_time:
+        if datetime.now() > expiration_time:
             customer.access_token = ''
             return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -234,7 +233,7 @@ def payinvoice(request):
     if customer.token_time != '':
         customer_time = datetime.fromisoformat(customer.token_time)
         expiration_time = customer_time + timedelta(days=30)
-        if timezone.now() > expiration_time:
+        if datetime.now() > expiration_time:
             customer.access_token = ''
             return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -253,7 +252,7 @@ def payinvoice(request):
 
     c_time = datetime.fromisoformat(invoice.create_time)
     expiration_time = c_time + timedelta(minutes=15)
-    if timezone.now() > expiration_time:
+    if datetime.now() > expiration_time:
         invoice.delete()
         return Response({'Error': 'Invoice has expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 

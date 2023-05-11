@@ -1,3 +1,4 @@
+import datetime
 import secrets
 
 from django.contrib.auth import authenticate, login
@@ -162,7 +163,7 @@ class CreateInvoiceSerializer(serializers.Serializer):
             airline=airline,
             status=False,
             stamp=stamp,
-            create_time=timezone.now(),
+            create_time=datetime.now(),
         )
 
         data["invoice_id"] = invoice.invoice_id
