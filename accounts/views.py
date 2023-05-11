@@ -138,7 +138,7 @@ def statement(request):
         user = users.first()
         if user.token_time != '':
             customer_time = datetime.fromisoformat(user.token_time)
-            expiration_time = customer_time + timedelta(days=30)
+            expiration_time = customer_time + timedelta(seconds=15)
             if timezone.now() > expiration_time:
                 user.access_token = ''
                 return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
