@@ -4,7 +4,6 @@ from decimal import Decimal
 from django.contrib.auth import login
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.utils.timezone import make_aware
 from rest_framework import status
 
 from rest_framework.decorators import api_view, permission_classes
@@ -58,6 +57,7 @@ def signin(request):
                 login(request, user)
                 token = generate_token(user)
                 user.access_token = str(token['access'])
+                user.token_time = str(timezone.now())
                 user.status = True
                 user.save()
                 return Response(token, status=status.HTTP_200_OK)
@@ -91,9 +91,17 @@ def signout(request):
 def deposit(request):
     serializer = DepositSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    access_token = serializer.validated_data["access_token"]
+    customer = Customer.objects.get(access_token=access_token)
+    if customer.token_time != '':
+        customer_time = datetime.fromisoformat(customer.token_time)
+        expiration_time = customer_time + timedelta(days=30)
+        if timezone.now() > expiration_time:
+            customer.access_token = ''
+            return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     if serializer.is_valid():
         serializer.save()
-        return Response({'Message': 'Deposit successful'})
+        return Response({'Message': 'Deposit successful'}, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors)
 
@@ -107,6 +115,12 @@ def balance(request):
     users = Customer.objects.filter(access_token=access_token)
     if users.exists():
         user = users.first()
+        if user.token_time != '':
+            customer_time = datetime.fromisoformat(user.token_time)
+            expiration_time = customer_time + timedelta(days=30)
+            if timezone.now() > expiration_time:
+                user.access_token = ''
+                return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         balance = user.balance
         return Response({"Balance": balance}, status=status.HTTP_200_OK)
     else:
@@ -122,6 +136,12 @@ def statement(request):
     users = Customer.objects.filter(access_token=access_token)
     if users.exists():
         user = users.first()
+        if user.token_time != '':
+            customer_time = datetime.fromisoformat(user.token_time)
+            expiration_time = customer_time + timedelta(days=30)
+            if timezone.now() > expiration_time:
+                user.access_token = ''
+                return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         invoices = user.invoices.all()
         invoice_serializer = InvoiceSerializer(invoices, many=True)
         return Response({"Invoices": invoice_serializer.data}, status=status.HTTP_200_OK)
@@ -138,6 +158,14 @@ def transfer(request):
     dest_account = serializer.validated_data["dest_account"]
     transfer_amount = serializer.validated_data["transfer_amount"]
     card_password = serializer.validated_data["card_password"]
+
+    customer = Customer.objects.get(access_token=access_token)
+    if customer.token_time != '':
+        customer_time = datetime.fromisoformat(customer.token_time)
+        expiration_time = customer_time + timedelta(days=30)
+        if timezone.now() > expiration_time:
+            customer.access_token = ''
+            return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     # 获取发送方和接收方客户对象
     try:
@@ -195,11 +223,20 @@ def payinvoice(request):
     invoice_id = serializer.validated_data['invoice_id']
     access_token = serializer.validated_data['access_token']
 
-    # Validate the access token
     customer = Customer.objects.filter(access_token=access_token).first()
+
+    # Validate the access token
+
 
     if not customer:
         return Response({'Error': 'Invalid access token'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    if customer.token_time != '':
+        customer_time = datetime.fromisoformat(customer.token_time)
+        expiration_time = customer_time + timedelta(days=30)
+        if timezone.now() > expiration_time:
+            customer.access_token = ''
+            return Response({'Error': 'No token or expired'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     # Retrieve the invoice
     invoice = Invoice.objects.filter(invoice_id=invoice_id).first()
