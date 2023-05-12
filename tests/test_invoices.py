@@ -21,6 +21,7 @@ class TestInvoiceAPI(APITestCase):
             bank_account='12345678901234567890',
             balance=100000,
             token="testtoken1",
+            email="123@456.com",
             token_time=datetime.datetime.now().isoformat()
         )
         self.airline = Customer.objects.create(
@@ -34,6 +35,7 @@ class TestInvoiceAPI(APITestCase):
             bank_account='12345678901234567890',
             balance=100000,
             token="testtoken2",
+            email="789@456.com",
             token_time=datetime.datetime.now().isoformat()
         )
 
@@ -78,6 +80,7 @@ class PayInvoiceTestCase(APITestCase):
             bank_account='12345678901234567890',
             balance=100000,
             token="testtoken1",
+            email="789@456.com",
             token_time=datetime.datetime.now().isoformat()
         )
         self.expired_customer = Customer.objects.create(
@@ -91,6 +94,7 @@ class PayInvoiceTestCase(APITestCase):
             bank_account='12345678901234567890',
             balance=100000,
             token="testtoken2",
+            email="123@456.com",
             token_time=(datetime.datetime.now() - datetime.timedelta(days=31)).isoformat()
         )
         self.invoice = Invoice.objects.create(total_price='100', airline='testuser2',

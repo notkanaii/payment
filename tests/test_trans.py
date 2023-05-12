@@ -71,7 +71,7 @@ class BalanceApiTestCase(APITestCase):
         self.customer = Customer.objects.create_user(username='test_user', password='test_password',
                                                      customer_name='test_customer', card_number=1234567890123456,
                                                      card_password='test_card_password', id_number='1234567890',
-                                                     phone=1234567890, balance=100000, token='token',
+                                                     phone=1234567890, balance=100000, token='token',email="123@456.com",
                                                      token_time='2023-05-11 10:13:22.046348')
         self.url = reverse('getbalance')
 
@@ -169,6 +169,7 @@ class TransferTestCase(APITestCase):
             bank_account='12345678901234567890',
             balance=100000,
             token="testtoken1",
+            email="123@456.com",
             token_time=datetime.datetime.now().isoformat()
         )
         self.customer2 = Customer.objects.create(
@@ -182,6 +183,7 @@ class TransferTestCase(APITestCase):
             bank_account='12345678901234567890',
             balance=100000,
             token="testtoken2",
+            email="789@456.com",
             token_time=datetime.datetime.now().isoformat()
         )
 
