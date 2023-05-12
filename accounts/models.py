@@ -8,7 +8,7 @@ class Customer(AbstractUser):
     card_number = models.BigIntegerField()
     card_password = models.CharField(max_length=100)
     id_number = models.CharField(max_length=100, unique=True)
-    phone = models.BigIntegerField()
+    phone = models.CharField(max_length=30)
     bank_account = models.CharField(max_length=100, blank=True, null=True)
     token = models.CharField(max_length=500, blank=True, null=True, default='')
     balance = models.DecimalField(max_digits=10, decimal_places=2, default='0')
