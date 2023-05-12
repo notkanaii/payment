@@ -62,7 +62,7 @@ def signin(request):
                         user.status = True
                         user.save()
                         token_generated = True
-                return Response(token['access'], status=status.HTTP_200_OK)
+                return Response({'token': token['access']}, status=status.HTTP_200_OK)
             else:
                 return Response({"Message": "Invalid password"}, status=status.HTTP_404_NOT_FOUND)
         else:
