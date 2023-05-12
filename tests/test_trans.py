@@ -91,7 +91,7 @@ class BalanceApiTestCase(APITestCase):
         }
         response = self.client.post(self.url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertEqual(response.data['Error'], 'Token expired')
+        self.assertEqual(response.data['Message'], 'Token expired')
 
     def test_balance_invalid_token(self):
         data = {
@@ -99,7 +99,7 @@ class BalanceApiTestCase(APITestCase):
         }
         response = self.client.post(self.url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertEqual(response.data['Error'], 'Invalid user')
+        self.assertEqual(response.data['Message'], 'Invalid user')
 
 
 class StatementTest(APITestCase):
@@ -146,14 +146,14 @@ class StatementTest(APITestCase):
         data = {"token": "testtoken"}
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertEqual(response.data["Error"], "Token expired")
+        self.assertEqual(response.data["Message"], "Token expired")
 
     def test_statement_invalid_token(self):
         url = reverse("statement")
         data = {"token": "invalidtoken"}
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertEqual(response.data["Error"], "Invalid user")
+        self.assertEqual(response.data["Message"], "Invalid user")
 
 
 class TransferTestCase(APITestCase):

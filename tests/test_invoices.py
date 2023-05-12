@@ -1,7 +1,6 @@
 import datetime
 from decimal import Decimal
 
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -66,7 +65,6 @@ class TestInvoiceAPI(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-
 class PayInvoiceTestCase(APITestCase):
     def setUp(self):
         self.customer = Customer.objects.create(
@@ -95,7 +93,8 @@ class PayInvoiceTestCase(APITestCase):
             token="testtoken2",
             token_time=(datetime.datetime.now() - datetime.timedelta(days=31)).isoformat()
         )
-        self.invoice = Invoice.objects.create(total_price='100', airline='testuser2', create_time=datetime.datetime.now())
+        self.invoice = Invoice.objects.create(total_price='100', airline='testuser2',
+                                              create_time=datetime.datetime.now())
 
     def test_payinvoice(self):
         url = '/payinvoice/'
@@ -103,7 +102,8 @@ class PayInvoiceTestCase(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Invoice.objects.get(invoice_id=self.invoice.invoice_id).status, True)
-        self.assertEqual(Invoice.objects.get(invoice_id=self.invoice.invoice_id).customer, Customer.objects.get(username='testuser'))
+        self.assertEqual(Invoice.objects.get(invoice_id=self.invoice.invoice_id).customer,
+                         Customer.objects.get(username='testuser'))
         self.assertEqual(Customer.objects.get(username='testuser').balance, Decimal('99900.00'))
 
     def test_invalid_token(self):
@@ -117,7 +117,7 @@ class PayInvoiceTestCase(APITestCase):
         data = {'invoice_id': self.invoice.invoice_id, 'token': self.expired_customer.token}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertEqual(response.data['Error'], 'Token expired')
+        self.assertEqual(response.data['Message'], 'Token expired')
         self.assertEqual(Customer.objects.get(username='testuser2').token, '')
 
     def test_no_token(self):
@@ -141,7 +141,7 @@ class PayInvoiceTestCase(APITestCase):
         data = {'invoice_id': self.invoice.invoice_id, 'token': self.customer.token}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertEqual(response.data['Error'], 'Invalid airline')
+        self.assertEqual(response.data['Message'], 'Invalid airline')
 
     def test_expired_invoice(self):
         self.invoice.create_time = (datetime.datetime.now() - datetime.timedelta(minutes=20)).isoformat()
@@ -150,4 +150,4 @@ class PayInvoiceTestCase(APITestCase):
         data = {'invoice_id': self.invoice.invoice_id, 'token': self.customer.token}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertEqual(response.data['Error'], 'Invoice has expired')
+        self.assertEqual(response.data['Message'], 'Invoice has expired')
